@@ -1,0 +1,88 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_sharepointonline": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "new_sharedsharepointonline_9279e"
+        },
+        "api": {
+          "name": "shared_sharepointonline"
+        }
+      },
+      "shared_office365": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "new_sharedoffice365_149e9"
+        },
+        "api": {
+          "name": "shared_office365"
+        }
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "When_an_item_is_created": {
+          "recurrence": {
+            "frequency": "Minute",
+            "interval": 3
+          },
+          "splitOn": "@triggerOutputs()?['body/value']",
+          "metadata": {
+            "operationMetadataId": "91d493c2-0e0b-4327-8c77-8145d5aa3d18"
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "dataset": "https://6j5grw.sharepoint.com/sites/SampleTeamSite",
+              "table": "e9e7a78c-9c23-4b63-bd48-9609bb1ac7c7"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "GetOnNewItems"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        }
+      },
+      "actions": {
+        "Send_an_email": {
+          "runAfter": {},
+          "metadata": {
+            "operationMetadataId": "7892d48c-e815-4050-8aa1-b835907a78fd"
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "emailMessage/To": "@triggerBody()?['ReservedBy']?['Email']",
+              "emailMessage/Subject": "Electric Vehicle Charger Reservation - Confirmed",
+              "emailMessage/Body": "<p>Hi<b><strong> </strong></b>@{triggerBody()?['ReservedBy']?['DisplayName']}<span style=\"color: rgb(0, 0, 0);\">,</span><span>\n</span></p><p>You have successfully reserved EV Charger 1 at the below Timing Slot.<span>\n</span></p><p>Reservation Date: @{triggerBody()?['ReservationDate']}</p><p>Timing Slot: @{triggerBody()?['TimeSlots']?['Value']}<span>\n\n</span></p><p>Your Timing Slot ends by @{convertTimeZone(triggerOutputs()?['body/EndTime'],'UTC','Pacific Standard Time','hh:mm tt')}. Please make sure you disconnect your charger atleast 5 minutes before the End Time so its available for the next person. Failing to do so will attract a penalty and notification sent to your Manager.<span>\n\n</span></p><p>Thanks,</p><p>EV Charging Reservation System</p>"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+              "connectionName": "shared_office365",
+              "operationId": "SendEmailV2"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        }
+      },
+      "outputs": {}
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}
